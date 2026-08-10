@@ -1,6 +1,6 @@
 # Environment files (Secrets, Passwörter, API Keys)
-appsettings.Development.json
-appsettings.Production.json
+**/appsettings.Development.json
+**/appsettings.Production.json
 
 # IDE
 .vscode/
