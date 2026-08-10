@@ -23,7 +23,7 @@ public class GlobalExceptionHandlerMiddleware
             context.Response.StatusCode = 404;
             await context.Response.WriteAsJsonAsync(new { message = ex.Message });
         }
-        catch (InvalidOperationException ex)  // ← Email schon registriert, etc.
+        catch (InvalidOperationException ex)
         {
             _logger.LogWarning(ex, "Invalid operation");
             context.Response.StatusCode = 400;
@@ -35,7 +35,7 @@ public class GlobalExceptionHandlerMiddleware
             context.Response.StatusCode = 400;
             await context.Response.WriteAsJsonAsync(new { message = ex.Message });
         }
-        catch (UnauthorizedAccessException ex)  // ← Row-Level Auth failed
+        catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning(ex, "Unauthorized access");
             context.Response.StatusCode = 403;

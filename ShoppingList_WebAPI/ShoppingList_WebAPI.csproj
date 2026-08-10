@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="BCrypt.Net-Core" Version="1.6.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
@@ -19,12 +20,19 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
     </ItemGroup>
 
     <ItemGroup>
       <Content Include="..\.dockerignore">
         <Link>.dockerignore</Link>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="DTOs\ListItemDTOs\" />
+      <Folder Include="DTOs\ListDTOs\" />
+      <Folder Include="DTOs\SharedListDTOs\" />
     </ItemGroup>
 
 </Project>

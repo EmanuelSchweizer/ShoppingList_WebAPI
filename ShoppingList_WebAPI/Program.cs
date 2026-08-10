@@ -18,6 +18,14 @@ builder.Services.AddDbContext<AppDbContext>(opt
 
 var app = builder.Build();
 
+//Init data on empty database
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    context.Database.Migrate(); 
+    SeedData.Initialize(context);
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
