@@ -1,0 +1,29 @@
+# Environment files (Secrets, Passwörter, API Keys)
+appsettings.Development.json
+appsettings.Production.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build
+bin/
+obj/
+*.dll
+*.exe
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (falls du Frontend auch im Repo hast)
+node_modules/
+.env
+.env.local
