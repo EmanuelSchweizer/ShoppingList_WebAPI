@@ -10,21 +10,21 @@ namespace ShoppingList_WebAPI.Controllers;
 [Route("[controller]")]
 public class UserController(IUserService service) : ControllerBase
 {
-    [HttpPost(Name = "SignUp")]
+    [HttpPost("signup")]
     public async Task<ActionResult<UserResponse>> SignUp(SignUpUserRequest request, CancellationToken ct = default)
     {
         var response = await service.SignUpAsync(request, ct);
         return Ok(response);
     }
     
-    [HttpPost(Name = "SignIn")]
+    [HttpPost("signIn")]
     public async Task<ActionResult<UserResponse>> SignIn(SignInUserRequest request, CancellationToken ct = default)
     {
         var response = await service.SignInAsync(request, ct);
         return Ok(response);
     }
     
-    [HttpPost(Name = "ResolveUser")]
+    [HttpPost("resolveUser")]
     [Authorize]
     public async Task<ActionResult<UserResponse>> ResolveUser(CancellationToken ct = default)
     {

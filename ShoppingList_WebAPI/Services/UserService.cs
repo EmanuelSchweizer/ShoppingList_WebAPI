@@ -98,7 +98,11 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
     private string GenerateJwtToken(User user, Role role)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(config["Jwt:Secret"]);
+        var secret = config["Jwt:Secret"];
+        if (string.IsNullOrEmpty(secret))
+            throw new InvalidOperationException("JWT Secret not configured");
+        
+        var key = Encoding.ASCII.GetBytes(secret);
     
         var tokenDescriptor = new SecurityTokenDescriptor
         {

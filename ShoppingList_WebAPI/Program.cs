@@ -1,6 +1,8 @@
+using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using ShoppingList_WebAPI.Data;
 using ShoppingList_WebAPI.Middleware;
+using ShoppingList_WebAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,7 @@ builder.Configuration
 //Services
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddDbContext<AppDbContext>(opt 
     => opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -26,10 +29,13 @@ using (var scope = app.Services.CreateScope())
     SeedData.Initialize(context);
 }
 
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
+
 app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<ApiKeyMiddleware>();
