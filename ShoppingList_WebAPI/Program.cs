@@ -1,8 +1,11 @@
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using ShoppingList_WebAPI.Data;
 using ShoppingList_WebAPI.Middleware;
 using ShoppingList_WebAPI.Services;
+using ShoppingList_WebAPI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,12 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddDbContext<AppDbContext>(opt 
     => opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdmin", policy => 
+        policy.RequireRole("admin"));
+});
+builder.Services.AddCustomRateLimiting();
 
 var app = builder.Build();
 
@@ -40,6 +49,7 @@ app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<ApiKeyMiddleware>();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 
 app.Run();
