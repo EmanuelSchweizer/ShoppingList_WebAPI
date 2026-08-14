@@ -37,13 +37,6 @@ public static class SeedData
                         Password = BCrypt.Net.BCrypt.HashPassword("demoadmin123"),
                         Name = "demoadmin",
                         RoleId = demoAdminRole.Id
-                    },
-                    new User
-                    {
-                        Email = "emanuel.schweizer@icloud.com",
-                        Password = BCrypt.Net.BCrypt.HashPassword("admin"),
-                        Name = "emanuel",
-                        RoleId = adminRole.Id
                     }
                 };
             

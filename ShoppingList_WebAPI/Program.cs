@@ -4,6 +4,8 @@ using ShoppingList_WebAPI.Data;
 using ShoppingList_WebAPI.Middleware;
 using ShoppingList_WebAPI.Services;
 using ShoppingList_WebAPI.Extensions;
+using ShoppingList_WebAPI.Services.ListItems;
+using ShoppingList_WebAPI.Services.SharedLists;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,9 @@ builder.Configuration
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IShoppingListService, ShoppingListService>();
+builder.Services.AddScoped<IListItemsService, ListItemsService>();
+builder.Services.AddScoped<ISharedListService, SharedListService>();
 builder.Services.AddDbContext<AppDbContext>(opt 
     => opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddAuthorization(options =>

@@ -1,3 +1,4 @@
+using ShoppingList_WebAPI.DTOs.ListItemDTOs;
 using ShoppingList_WebAPI.Models;
 
 namespace ShoppingList_WebAPI.DTOs.ListDTOs;
@@ -9,4 +10,5 @@ public class ShoppingListResponse
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public int OwnerId { get; set; }
+    public List<ListItemResponse> Items { get; set; }
 }

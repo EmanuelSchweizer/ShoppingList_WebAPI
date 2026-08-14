@@ -9,5 +9,5 @@ public class ListItem
     public DateTime UpdatedAt { get; set; }
     public int ListId { get; set; }
     
-    public required ShoppingList ShoppingList { get; set; }
+    public ShoppingList ShoppingList { get; set; }
 }

@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using ShoppingList_WebAPI.Data;
 using ShoppingList_WebAPI.DTOs.ListDTOs;
+using ShoppingList_WebAPI.DTOs.ListItemDTOs;
+using ShoppingList_WebAPI.Models;
 
 namespace ShoppingList_WebAPI.Services;
 
@@ -7,26 +10,124 @@ public class ShoppingListService(AppDbContext context) : IShoppingListService
 {
     public async Task<List<ShoppingListResponse>> GetAllListsAsync(int userId, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var userExists = await context.Users.AnyAsync(x => x.Id == userId, ct);
+        if (!userExists)
+            throw new KeyNotFoundException("User not found");
+        
+        var allLists = await context.ShoppingLists
+            .Where(x => x.OwnerId == userId)
+            .Select(x => new ShoppingListResponse
+            {
+                Id = x.Id,
+                Name = x.Name,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
+                OwnerId = x.OwnerId,
+                Items = x.Items.Select(i => new ListItemResponse
+                {
+                    Id = i.Id,
+                    Name = i.Name,
+                    Bought = i.Bought,
+                    CreatedAt = i.CreatedAt,
+                    UpdatedAt = i.UpdatedAt,
+                    ListId = i.ListId
+                }).ToList()
+            })
+            .ToListAsync(ct);
+
+        return allLists;
     }
 
     public async Task<ShoppingListResponse> GetListAsync(int userId, int listId, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var list = await context.ShoppingLists
+            .Where(x => x.OwnerId == userId && x.Id == listId)
+            .Select(x => new ShoppingListResponse
+            {
+                Id = x.Id,
+                Name = x.Name,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
+                OwnerId = x.OwnerId,
+                Items = x.Items.Select(i => new ListItemResponse
+                {
+                    Id = i.Id,
+                    Name = i.Name,
+                    Bought = i.Bought,
+                    CreatedAt = i.CreatedAt,
+                    UpdatedAt = i.UpdatedAt,
+                    ListId = i.ListId
+                }).ToList()
+            })
+            .FirstOrDefaultAsync(ct);
+        
+        if(list == null)
+            throw new KeyNotFoundException("List not found");
+
+        return list;
     }
 
     public async Task<ShoppingListResponse> CreateListAsync(int userId, CreateShoppingListRequest req, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var userExists = await context.Users.AnyAsync(x => x.Id == userId, ct);
+        if (!userExists)
+            throw new KeyNotFoundException("User not found");
+
+        var newList = new ShoppingList
+        {
+            Name = req.Name,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            OwnerId = userId
+        };
+        
+        context.ShoppingLists.Add(newList);
+        await context.SaveChangesAsync(ct);
+        
+        return new ShoppingListResponse
+        {
+            Id = newList.Id,
+            Name = newList.Name,
+            CreatedAt = newList.CreatedAt,
+            UpdatedAt = newList.UpdatedAt,
+            OwnerId = newList.OwnerId,
+            Items = new List<ListItemResponse>()
+        };
     }
 
     public async Task<ShoppingListResponse> UpdateListAsync(int userId, int listId, UpdateShoppingListRequest req, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var list = await context.ShoppingLists
+            .FirstOrDefaultAsync(x => x.Id == listId && x.OwnerId == userId, ct);
+        
+        if (list == null)
+            throw new KeyNotFoundException("List not found");
+        
+        list.Name = req.Name;
+        list.UpdatedAt = DateTime.UtcNow;
+        
+        await  context.SaveChangesAsync(ct);
+
+        return new ShoppingListResponse
+        {
+            Id = list.Id,
+            Name = list.Name,
+            CreatedAt = list.CreatedAt,
+            UpdatedAt = list.UpdatedAt,
+            OwnerId = list.OwnerId,
+            Items = new List<ListItemResponse>()
+        };
     }
 
     public async Task DeleteListAsync(int userId, int listId, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var list = await context.ShoppingLists
+            .FirstOrDefaultAsync(x => x.Id == listId && x.OwnerId == userId, ct);
+        
+        if (list == null)
+            throw new KeyNotFoundException("List not found");
+        
+        context.ShoppingLists.Remove(list);
+        await context.SaveChangesAsync(ct);
     }
 }

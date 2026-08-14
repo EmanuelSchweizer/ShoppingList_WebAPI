@@ -6,6 +6,6 @@ public class SharedList
     public int ListId { get; set; }
     public int UserId { get; set; }
     
-    public required User User { get; set; }
-    public required ShoppingList ShoppingList { get; set; }
+    public User User { get; set; }
+    public ShoppingList ShoppingList { get; set; }
 }

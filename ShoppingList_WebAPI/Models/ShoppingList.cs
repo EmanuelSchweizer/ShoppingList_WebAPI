@@ -8,7 +8,7 @@ public class ShoppingList
     public required DateTime UpdatedAt { get; set; }
     public required int OwnerId { get; set; }
     
-    public required User Owner { get; set; }
+    public User Owner { get; set; }
     public List<SharedList> SharedWith { get; set; } = new();
     public List<ListItem> Items { get; set; } = new();
 }
