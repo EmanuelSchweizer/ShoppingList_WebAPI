@@ -57,7 +57,7 @@ public class ShoppingListService(AppDbContext context) : IShoppingListService
             })
             .FirstOrDefaultAsync(ct);
         
-        if(list == null)
+        if (list == null)
             throw new KeyNotFoundException("List not found");
 
         return list;
