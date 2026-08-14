@@ -33,31 +33,27 @@ public class UserController(IUserService service) : ControllerBase
         return Ok(response);
     }
 
-    [HttpPut("updateUser")]
+    [HttpPut("{id}")]
     [Authorize(Policy = "RequireAdmin")]
-    public async Task<ActionResult<UserResponse>> UpdateUser(UpdateUserRequest request, CancellationToken ct = default)
+    public async Task<ActionResult<UserResponse>> UpdateUser(int id, UpdateUserRequest request, CancellationToken ct = default)
     {
-        var userId = User.GetUserId();
-        var response = await service.UpdateUserAsync(userId, request, ct);
+        var response = await service.UpdateUserAsync(id, request, ct);
         return Ok(response);
     }
 
-    [HttpPut("updatePassword")]
+    [HttpPut("{id}/password")]
     [Authorize(Policy = "RequireAdmin")]
-    public async Task<ActionResult> UpdatePassword(UpdateUserPasswordRequest request,
-        CancellationToken ct = default)
+    public async Task<ActionResult> UpdatePassword(int id, UpdateUserPasswordRequest request, CancellationToken ct = default)
     {
-        var userId = User.GetUserId();
-        await service.UpdatePasswordAsync(userId, request, ct);
+        await service.UpdatePasswordAsync(id, request, ct);
         return NoContent();
     }
 
-    [HttpDelete("deleteUser")]
+    [HttpDelete("{id}")]
     [Authorize(Policy = "RequireAdmin")]
-    public async Task<ActionResult> DeleteUser(CancellationToken ct = default)
+    public async Task<ActionResult> DeleteUser(int id, CancellationToken ct = default)
     {
-        var userId = User.GetUserId();
-        await  service.DeleteUserAsync(userId, ct);
+        await service.DeleteUserAsync(id, ct);
         return NoContent();
     }
 }

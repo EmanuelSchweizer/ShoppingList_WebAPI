@@ -1,6 +1,157 @@
 @ShoppingList_WebAPI_HostAddress = http://localhost:5245
+@authToken = PASTE_JWT_TOKEN_HERE
 
-GET {{ShoppingList_WebAPI_HostAddress}}/weatherforecast/
+### Sign up
+POST {{ShoppingList_WebAPI_HostAddress}}/User/signup
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "Passw0rd!"
+}
+
+###
+
+### Sign in
+POST {{ShoppingList_WebAPI_HostAddress}}/User/signIn
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Passw0rd!"
+}
+
+###
+
+### Resolve current user (from token)
+POST {{ShoppingList_WebAPI_HostAddress}}/User/resolveUser
+Authorization: Bearer {{authToken}}
 Accept: application/json
+
+###
+
+### [Admin] Update user
+PUT {{ShoppingList_WebAPI_HostAddress}}/User/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Updated Name",
+  "email": "updated@example.com",
+  "roleId": 1
+}
+
+###
+
+### [Admin] Set password
+PUT {{ShoppingList_WebAPI_HostAddress}}/User/1/password
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "newPassword": "NewPassw0rd!"
+}
+
+###
+
+### [Admin] Delete user
+DELETE {{ShoppingList_WebAPI_HostAddress}}/User/1
+Authorization: Bearer {{authToken}}
+
+###
+
+### Get all lists for the logged-in user
+GET {{ShoppingList_WebAPI_HostAddress}}/ShoppingList
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+###
+
+### Get a single list
+GET {{ShoppingList_WebAPI_HostAddress}}/ShoppingList/1
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+###
+
+### Create a list
+POST {{ShoppingList_WebAPI_HostAddress}}/ShoppingList
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Groceries"
+}
+
+###
+
+### Rename a list
+PUT {{ShoppingList_WebAPI_HostAddress}}/ShoppingList/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Groceries (updated)"
+}
+
+###
+
+### Delete a list
+DELETE {{ShoppingList_WebAPI_HostAddress}}/ShoppingList/1
+Authorization: Bearer {{authToken}}
+
+###
+
+### Get items of a list
+GET {{ShoppingList_WebAPI_HostAddress}}/shoppinglists/1/items
+Authorization: Bearer {{authToken}}
+Accept: application/json
+
+###
+
+### Add an item
+POST {{ShoppingList_WebAPI_HostAddress}}/shoppinglists/1/items
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Milk"
+}
+
+###
+
+### Update an item
+PUT {{ShoppingList_WebAPI_HostAddress}}/shoppinglists/1/items/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Milk (2L)",
+  "bought": true
+}
+
+###
+
+### Delete an item
+DELETE {{ShoppingList_WebAPI_HostAddress}}/shoppinglists/1/items/1
+Authorization: Bearer {{authToken}}
+
+###
+
+### Share a list by email
+POST {{ShoppingList_WebAPI_HostAddress}}/SharedList/1
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "email": "friend@example.com"
+}
+
+###
+
+### Remove a share
+DELETE {{ShoppingList_WebAPI_HostAddress}}/SharedList/1/2
+Authorization: Bearer {{authToken}}
 
 ###
