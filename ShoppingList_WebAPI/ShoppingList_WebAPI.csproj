@@ -30,10 +30,4 @@
       </Content>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="DTOs\ListItemDTOs\" />
-      <Folder Include="DTOs\ListDTOs\" />
-      <Folder Include="DTOs\SharedListDTOs\" />
-    </ItemGroup>
-
 </Project>

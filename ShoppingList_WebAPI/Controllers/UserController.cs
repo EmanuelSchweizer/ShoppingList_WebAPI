@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShoppingList_WebAPI.DTOs;
 using ShoppingList_WebAPI.Services;
+using ShoppingList_WebAPI.Extensions;
 
 namespace ShoppingList_WebAPI.Controllers;
 
@@ -28,12 +28,36 @@ public class UserController(IUserService service) : ControllerBase
     [Authorize]
     public async Task<ActionResult<UserResponse>> ResolveUser(CancellationToken ct = default)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
-        if (string.IsNullOrEmpty(userId))
-            throw new UnauthorizedAccessException("Invalid token");
-
+        var userId = User.GetUserId();
         var response = await service.ResolveUserAsync(userId, ct);
         return Ok(response);
+    }
+
+    [HttpPut("updateUser")]
+    [Authorize(Policy = "RequireAdmin")]
+    public async Task<ActionResult<UserResponse>> UpdateUser(UpdateUserRequest request, CancellationToken ct = default)
+    {
+        var userId = User.GetUserId();
+        var response = await service.UpdateUserAsync(userId, request, ct);
+        return Ok(response);
+    }
+
+    [HttpPut("updatePassword")]
+    [Authorize(Policy = "RequireAdmin")]
+    public async Task<ActionResult> UpdatePassword(UpdateUserPasswordRequest request,
+        CancellationToken ct = default)
+    {
+        var userId = User.GetUserId();
+        await service.UpdatePasswordAsync(userId, request, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("deleteUser")]
+    [Authorize(Policy = "RequireAdmin")]
+    public async Task<ActionResult> DeleteUser(CancellationToken ct = default)
+    {
+        var userId = User.GetUserId();
+        await  service.DeleteUserAsync(userId, ct);
+        return NoContent();
     }
 }

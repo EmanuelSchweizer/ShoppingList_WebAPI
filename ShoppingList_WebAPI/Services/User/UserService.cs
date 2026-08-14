@@ -73,14 +73,11 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
         };
     }
 
-    public async Task<UserResponse> ResolveUserAsync(string userId, CancellationToken ct)
+    public async Task<UserResponse> ResolveUserAsync(int userId, CancellationToken ct)
     {
-        if (!int.TryParse(userId, out var id))
-            throw new ArgumentException("Invalid user ID format");
-        
         var user = await context.Users
             .Include(x => x.Role)
-            .FirstOrDefaultAsync(x => x.Id == id, ct);
+            .FirstOrDefaultAsync(x => x.Id == userId, ct);
         
         if(user == null)
             throw new KeyNotFoundException("User not found");
@@ -93,6 +90,21 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
             RoleId = user.RoleId,
             RoleName = user.Role.Name
         };
+    }
+
+    public async Task<UserResponse> UpdateUserAsync(int userId, UpdateUserRequest req, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task UpdatePasswordAsync(int userId, UpdateUserPasswordRequest req, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task DeleteUserAsync(int userId, CancellationToken ct)
+    {
+        throw new NotImplementedException();
     }
     
     private string GenerateJwtToken(User user, Role role)
@@ -110,7 +122,7 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, role.Name)  // ← Brauchst du hier!
+                new Claim(ClaimTypes.Role, role.Name)
             }),
             Expires = DateTime.UtcNow.AddHours(24),
             SigningCredentials = new SigningCredentials(
