@@ -10,10 +10,6 @@ public class ShoppingListService(AppDbContext context) : IShoppingListService
 {
     public async Task<List<ShoppingListResponse>> GetAllListsAsync(int userId, CancellationToken ct)
     {
-        var userExists = await context.Users.AnyAsync(x => x.Id == userId, ct);
-        if (!userExists)
-            throw new KeyNotFoundException("User not found");
-        
         var allLists = await context.ShoppingLists
             .Where(x => x.OwnerId == userId)
             .Select(x => new ShoppingListResponse
