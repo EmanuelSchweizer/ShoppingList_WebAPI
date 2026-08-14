@@ -1,5 +1,3 @@
-using System.Security.Claims;
-using System.Threading.RateLimiting;
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using ShoppingList_WebAPI.Data;
