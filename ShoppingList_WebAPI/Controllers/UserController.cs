@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ShoppingList_WebAPI.DTOs;
+using Microsoft.AspNetCore.RateLimiting;
+using ShoppingList_WebAPI.DTOs.RefreshTokenDTOs;
+using ShoppingList_WebAPI.DTOs.UserDTOs;
 using ShoppingList_WebAPI.Services;
 using ShoppingList_WebAPI.Extensions;
 
@@ -54,6 +56,22 @@ public class UserController(IUserService service) : ControllerBase
     public async Task<ActionResult> DeleteUser(int id, CancellationToken ct = default)
     {
         await service.DeleteUserAsync(id, ct);
+        return NoContent();
+    }
+
+    [EnableRateLimiting(("strict"))]
+    [HttpPost("refresh")]
+    public async Task<ActionResult<RefreshTokenResponse>> Refresh(RefreshTokenRequest request,
+        CancellationToken ct = default)
+    {
+        var response = await service.RefreshTokenAsync(request, ct);
+        return Ok(response);
+    }
+    
+    [HttpPost("logout")]
+    public async Task<ActionResult> Logout(RefreshTokenRequest request, CancellationToken ct = default)
+    {
+        await service.LogoutAsync(request, ct);
         return NoContent();
     }
 }

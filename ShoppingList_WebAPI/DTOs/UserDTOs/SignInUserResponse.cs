@@ -1,4 +1,4 @@
-namespace ShoppingList_WebAPI.DTOs;
+namespace ShoppingList_WebAPI.DTOs.UserDTOs;
 
 public class SignInUserResponse
 {

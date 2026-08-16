@@ -2,11 +2,12 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using ShoppingList_WebAPI.Data;
-using ShoppingList_WebAPI.DTOs;
+using ShoppingList_WebAPI.DTOs.UserDTOs;
 using ShoppingList_WebAPI.Models;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
+using ShoppingList_WebAPI.DTOs.RefreshTokenDTOs;
 
 namespace ShoppingList_WebAPI.Services;
 
@@ -137,12 +138,68 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
 
         user.Password = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
         await context.SaveChangesAsync(ct);
+        
+        await RevokeAllRefreshTokensAsync(userId, ct);
     }
 
     public async Task DeleteUserAsync(int userId, CancellationToken ct)
     {
         throw new NotImplementedException();
     }
+
+    public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest req, CancellationToken ct)
+    {
+        var tokenHash = HashToken(req.RefreshToken);
+        
+        var existingToken = await context.RefreshTokens
+            .Include(x => x.User)
+            .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x => x.TokenHash == tokenHash, ct);
+        
+        if (existingToken == null)
+            throw new UnauthorizedAccessException("Invalid refresh token");
+
+        if (existingToken.RevokedAt != null)
+        {
+            //already used Token => suspicion of theft
+            //revoke all of the user's tokens
+            
+            await RevokeAllRefreshTokensAsync(existingToken.UserId, ct);
+            throw new UnauthorizedAccessException("Invalid refresh token");
+        }
+
+        if (existingToken.ExpiresAt <= DateTime.UtcNow)
+            throw new UnauthorizedAccessException("Refresh token is expired");
+        
+        
+        // revoke old token & create new token
+        existingToken.RevokedAt = DateTime.UtcNow;
+        
+        var newRefreshToken = await CreateRefreshTokenAsync(existingToken.UserId, ct);
+        var newAcessToken = GenerateJwtToken(existingToken.User, existingToken.User.Role);
+
+        return new RefreshTokenResponse
+        {
+            Token = newAcessToken,
+            RefreshToken = newRefreshToken
+        };
+    }
+    
+    public async Task LogoutAsync(RefreshTokenRequest req, CancellationToken ct)
+    {
+        var tokenHash = HashToken(req.RefreshToken);
+
+        var token = await context.RefreshTokens
+            .FirstOrDefaultAsync(x => x.TokenHash == tokenHash, ct);
+
+        if (token == null)
+            return;
+
+        token.RevokedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync(ct);
+    }
+    
+    //HELPERS
     
     private string GenerateJwtToken(User user, Role role)
     {
@@ -198,5 +255,17 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
         await context.SaveChangesAsync(ct);
 
         return refreshToken;
+    }
+    
+    private async Task RevokeAllRefreshTokensAsync(int userId, CancellationToken ct)
+    {
+        var tokens = await context.RefreshTokens
+            .Where(x => x.UserId == userId && x.RevokedAt == null)
+            .ToListAsync(ct);
+
+        foreach (var t in tokens)
+            t.RevokedAt = DateTime.UtcNow;
+
+        await context.SaveChangesAsync(ct);
     }
 }

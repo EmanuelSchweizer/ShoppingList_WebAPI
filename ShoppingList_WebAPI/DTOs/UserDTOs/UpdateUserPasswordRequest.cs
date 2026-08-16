@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ShoppingList_WebAPI.DTOs;
+namespace ShoppingList_WebAPI.DTOs.UserDTOs;
 
 public class UpdateUserPasswordRequest
 {

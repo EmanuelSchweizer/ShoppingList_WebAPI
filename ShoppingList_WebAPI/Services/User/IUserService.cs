@@ -1,4 +1,6 @@
-using ShoppingList_WebAPI.DTOs;
+using ShoppingList_WebAPI.DTOs.UserDTOs;
+using ShoppingList_WebAPI.DTOs.RefreshTokenDTOs;
+
 namespace ShoppingList_WebAPI.Services;
 
 public interface IUserService
@@ -9,4 +11,6 @@ public interface IUserService
     Task<UserResponse> UpdateUserAsync(int userId, UpdateUserRequest req, CancellationToken ct);
     Task UpdatePasswordAsync(int userId, UpdateUserPasswordRequest req , CancellationToken ct);
     Task DeleteUserAsync(int userId, CancellationToken ct);
+    Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest req, CancellationToken ct);
+    Task LogoutAsync(RefreshTokenRequest req, CancellationToken ct);
 }
