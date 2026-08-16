@@ -11,4 +11,5 @@ public class User
     public Role Role { get; set; }
     public List<ShoppingList> OwnedLists { get; set; } = new();
     public List<SharedList> SharedLists { get; set; } = new();
+    public List<RefreshToken> RefreshTokens { get; set; } = new();
 } 

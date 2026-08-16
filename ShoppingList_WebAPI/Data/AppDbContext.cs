@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<SharedList> SharedLists =>  Set<SharedList>();
     public DbSet<Role> Roles =>  Set<Role>();
     public DbSet<ListItem> ListItems =>  Set<ListItem>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,5 +39,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany(l => l.SharedWith)
             .HasForeignKey(sl => sl.ListId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<RefreshToken>()
+            .HasOne(rt => rt.User)
+            .WithMany(u => u.RefreshTokens)
+            .HasForeignKey(rt => rt.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasIndex(rt => rt.TokenHash)
+            .IsUnique();
     }
 }

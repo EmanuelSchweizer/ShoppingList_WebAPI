@@ -6,6 +6,8 @@ using ShoppingList_WebAPI.DTOs;
 using ShoppingList_WebAPI.Models;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
+
 namespace ShoppingList_WebAPI.Services;
 
 public class UserService(AppDbContext context, IConfiguration config) : IUserService
@@ -33,6 +35,7 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
         await context.SaveChangesAsync(ct);
         
         var token = GenerateJwtToken(newUser, role);
+        var refreshToken = await CreateRefreshTokenAsync(newUser.Id, ct);
 
         return new SignInUserResponse
         {
@@ -44,7 +47,8 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
                 RoleId = newUser.RoleId,
                 RoleName = role.Name
             },
-            Token = token
+            Token = token,
+            RefreshToken = refreshToken
         };
     }
 
@@ -58,6 +62,7 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
             throw new UnauthorizedAccessException("Invalid credentials");
         
         var token = GenerateJwtToken(user, user.Role);
+        var refreshToken = await CreateRefreshTokenAsync(user.Id, ct);
 
         return new SignInUserResponse
         {
@@ -69,7 +74,8 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
                 RoleId = user.RoleId,
                 RoleName = user.Role.Name
             },
-            Token = token
+            Token = token,
+            RefreshToken = refreshToken
         };
     }
 
@@ -94,12 +100,43 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
 
     public async Task<UserResponse> UpdateUserAsync(int userId, UpdateUserRequest req, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var user = await context.Users.Include(x => x.Role).FirstOrDefaultAsync(x => x.Id == userId, ct);
+    
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
+        var emailTaken = await context.Users.AnyAsync(x => x.Email == req.Email && x.Id != userId, ct);
+        if (emailTaken)
+            throw new InvalidOperationException("Email is already in use");
+
+        var roleExists = await context.Roles.AnyAsync(x => x.Id == req.RoleId, ct);
+        if (!roleExists)
+            throw new KeyNotFoundException("Role not found");
+    
+        user.Name = req.Name;
+        user.Email = req.Email;
+        user.RoleId = req.RoleId;
+    
+        await context.SaveChangesAsync(ct);
+
+        return new UserResponse
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            RoleId = user.RoleId,
+            RoleName = user.Role.Name
+        };
     }
 
     public async Task UpdatePasswordAsync(int userId, UpdateUserPasswordRequest req, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId, ct);
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
+        user.Password = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+        await context.SaveChangesAsync(ct);
     }
 
     public async Task DeleteUserAsync(int userId, CancellationToken ct)
@@ -124,7 +161,7 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, role.Name)
             }),
-            Expires = DateTime.UtcNow.AddHours(24),
+            Expires = DateTime.UtcNow.AddMinutes(15),
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key), 
                 SecurityAlgorithms.HmacSha256Signature)
@@ -132,5 +169,34 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
     
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
+    }
+    
+    private static string GenerateRefreshToken()
+    {
+        var randomBytes = RandomNumberGenerator.GetBytes(64);
+        return Convert.ToBase64String(randomBytes);
+    }
+    
+    private static string HashToken(string token)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(token));
+        return Convert.ToBase64String(hash);
+    }
+    
+    private async Task<string> CreateRefreshTokenAsync(int userId, CancellationToken ct)
+    {
+        var refreshToken = GenerateRefreshToken();
+
+        context.RefreshTokens.Add(new RefreshToken
+        {
+            UserId = userId,
+            TokenHash = HashToken(refreshToken),
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await context.SaveChangesAsync(ct);
+
+        return refreshToken;
     }
 }
