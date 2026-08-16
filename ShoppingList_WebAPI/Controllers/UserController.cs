@@ -26,12 +26,10 @@ public class UserController(IUserService service) : ControllerBase
         return Ok(response);
     }
     
-    [HttpPost("resolveUser")]
-    [Authorize]
-    public async Task<ActionResult<UserResponse>> ResolveUser(CancellationToken ct = default)
+    [HttpPost("resolveOrCreateUser")]
+    public async Task<ActionResult<SignInUserResponse>> ResolveOrCreateUser(ResolveUserRequest request, CancellationToken ct = default)
     {
-        var userId = User.GetUserId();
-        var response = await service.ResolveUserAsync(userId, ct);
+        var response = await service.ResolveOrCreateUserAsync(request, ct);
         return Ok(response);
     }
 
@@ -73,5 +71,13 @@ public class UserController(IUserService service) : ControllerBase
     {
         await service.LogoutAsync(request, ct);
         return NoContent();
+    }
+
+    [Authorize(Policy = "RequireAdmin")]
+    [HttpGet("allUsers")]
+    public async Task<ActionResult<List<UserResponse>>> GetAllUsersAsync(CancellationToken ct = default)
+    {
+        var response = await service.GetAllUsersAsync(ct);
+        return Ok(response);
     }
 }

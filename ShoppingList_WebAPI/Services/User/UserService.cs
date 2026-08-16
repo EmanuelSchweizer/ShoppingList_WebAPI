@@ -79,23 +79,46 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
             RefreshToken = refreshToken
         };
     }
-
-    public async Task<UserResponse> ResolveUserAsync(int userId, CancellationToken ct)
+    
+    public async Task<SignInUserResponse> ResolveOrCreateUserAsync(ResolveUserRequest req, CancellationToken ct)
     {
-        var user = await context.Users
-            .Include(x => x.Role)
-            .FirstOrDefaultAsync(x => x.Id == userId, ct);
-        
-        if(user == null)
-            throw new KeyNotFoundException("User not found");
+        var user = await context.Users.Include(x => x.Role).FirstOrDefaultAsync(x => x.Email == req.Email, ct);
 
-        return new UserResponse
+        if (user == null)
         {
-            Id = user.Id,
-            Name = user.Name,
-            Email = user.Email,
-            RoleId = user.RoleId,
-            RoleName = user.Role.Name
+            var role = await context.Roles.FirstOrDefaultAsync(x => x.Name == "user", ct);
+            if (role == null)
+                throw new KeyNotFoundException("Role not found");
+
+            user = new User
+            {
+                Name = req.Name,
+                Email = req.Email,
+                // OAuth-only account: random hash
+                Password = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()),
+                RoleId = role.Id
+            };
+
+            context.Users.Add(user);
+            await context.SaveChangesAsync(ct);
+            user.Role = role;
+        }
+
+        var token = GenerateJwtToken(user, user.Role);
+        var refreshToken = await CreateRefreshTokenAsync(user.Id, ct);
+
+        return new SignInUserResponse
+        {
+            User = new UserResponse
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                RoleId = user.RoleId,
+                RoleName = user.Role.Name
+            },
+            Token = token,
+            RefreshToken = refreshToken
         };
     }
 
@@ -144,7 +167,14 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
 
     public async Task DeleteUserAsync(int userId, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId, ct);
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+        
+        context.Users.Remove(user);
+        await context.SaveChangesAsync(ct);
+        
+        await RevokeAllRefreshTokensAsync(userId, ct);
     }
 
     public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest req, CancellationToken ct)
@@ -198,7 +228,24 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
         token.RevokedAt = DateTime.UtcNow;
         await context.SaveChangesAsync(ct);
     }
-    
+
+    public async Task<List<UserResponse>> GetAllUsersAsync(CancellationToken ct)
+    {
+        var users = await context.Users
+            .Include(x => x.Role)
+            .Select(x => new UserResponse
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Email = x.Email,
+                RoleId = x.RoleId,
+                RoleName = x.Role.Name
+            })
+            .ToListAsync(ct);
+
+        return users;
+    }
+
     //HELPERS
     
     private string GenerateJwtToken(User user, Role role)
