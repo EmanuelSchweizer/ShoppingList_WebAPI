@@ -1,23 +1,28 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-ARG BUILD_CONFIGURATION=Release
+﻿# ---------- Build stage ----------
+# Full SDK image — contains the compiler, only used to build.
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
-COPY ["ShoppingList_WebAPI/ShoppingList_WebAPI.csproj", "ShoppingList_WebAPI/"]
-RUN dotnet restore "ShoppingList_WebAPI/ShoppingList_WebAPI.csproj"
+
+# Copy the project file first and restore separately.
+# Docker caches this layer, so NuGet only re-downloads when
+# dependencies change — not on every source edit.
+COPY ["ShoppingList_WebAPI.csproj", "./"]
+RUN dotnet restore
+
+# Now copy the rest of the source and compile.
 COPY . .
-WORKDIR "/src/ShoppingList_WebAPI"
-RUN dotnet build "./ShoppingList_WebAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet publish -c Release -o /app/publish --no-restore
 
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./ShoppingList_WebAPI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
+# ---------- Runtime stage ----------
+# Runtime-only image (~110 MB vs ~800 MB for the SDK).
+# The compiler is not shipped to production.
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+# Copy only the build output from the previous stage.
+COPY --from=build /app/publish .
+
+# Documentation only — Railway routes via the PORT env variable.
+EXPOSE 8080
+
 ENTRYPOINT ["dotnet", "ShoppingList_WebAPI.dll"]

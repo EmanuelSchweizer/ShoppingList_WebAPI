@@ -10,8 +10,9 @@ using ShoppingList_WebAPI.Services.ListItems;
 using ShoppingList_WebAPI.Services.SharedLists;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
-
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls($"http://+:{port}");
 
 //Configuration
 builder.Configuration
@@ -66,9 +67,9 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<ApiKeyMiddleware>();
 app.UseAuthentication();  
