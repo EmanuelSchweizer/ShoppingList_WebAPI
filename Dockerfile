@@ -1,6 +1,6 @@
 ﻿# ---------- Build stage ----------
 # Full SDK image — contains the compiler, only used to build.
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy the project file first and restore separately.
@@ -17,7 +17,7 @@ RUN dotnet publish -c Release -o /app/publish --no-restore
 # ---------- Runtime stage ----------
 # Runtime-only image (~110 MB vs ~800 MB for the SDK).
 # The compiler is not shipped to production.
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 
 # Copy only the build output from the previous stage.
