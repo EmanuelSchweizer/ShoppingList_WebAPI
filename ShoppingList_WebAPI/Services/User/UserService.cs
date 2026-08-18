@@ -266,6 +266,8 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
                 new Claim(ClaimTypes.Role, role.Name)
             }),
             Expires = DateTime.UtcNow.AddMinutes(15),
+            Issuer = config["Jwt:Issuer"],
+            Audience = config["Jwt:Audience"],
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key), 
                 SecurityAlgorithms.HmacSha256Signature)

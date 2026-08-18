@@ -1,11 +1,15 @@
+using System.Text;
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using ShoppingList_WebAPI.Data;
 using ShoppingList_WebAPI.Middleware;
 using ShoppingList_WebAPI.Services;
 using ShoppingList_WebAPI.Extensions;
 using ShoppingList_WebAPI.Services.ListItems;
 using ShoppingList_WebAPI.Services.SharedLists;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +28,22 @@ builder.Services.AddScoped<IListItemsService, ListItemsService>();
 builder.Services.AddScoped<ISharedListService, SharedListService>();
 builder.Services.AddDbContext<AppDbContext>(opt 
     => opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"]!)),
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+    });
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireAdmin", policy => 
@@ -51,6 +71,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<ApiKeyMiddleware>();
+app.UseAuthentication();  
 app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
