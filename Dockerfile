@@ -6,11 +6,12 @@ WORKDIR /src
 # Copy the project file first and restore separately.
 # Docker caches this layer, so NuGet only re-downloads when
 # dependencies change — not on every source edit.
-COPY ["ShoppingList_WebAPI.csproj", "./"]
-RUN dotnet restore
+COPY ["ShoppingList_WebAPI/ShoppingList_WebAPI.csproj", "ShoppingList_WebAPI/"]
+RUN dotnet restore "ShoppingList_WebAPI/ShoppingList_WebAPI.csproj"
 
 # Now copy the rest of the source and compile.
 COPY . .
+WORKDIR /src/ShoppingList_WebAPI
 RUN dotnet publish -c Release -o /app/publish --no-restore
 
 # ---------- Runtime stage ----------
