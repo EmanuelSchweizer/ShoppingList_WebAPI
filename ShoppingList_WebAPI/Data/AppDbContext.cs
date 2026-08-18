@@ -21,6 +21,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasIndex(u => u.Email)
             .IsUnique();
         
+        //unique listId + userId
+        modelBuilder.Entity<SharedList>()
+            .HasIndex(sl => new { sl.ListId, sl.UserId })
+            .IsUnique();
+        
         // Foreign Key Constraints
         modelBuilder.Entity<ShoppingList>()
             .HasOne(l => l.Owner)
