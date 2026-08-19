@@ -1,4 +1,4 @@
-# ShoppingList_WebAPI
+# Ourlist_WebAPI
 
 REST API for a shared shopping list app. Users create lists, share them with
 others, and see changes in real time.
