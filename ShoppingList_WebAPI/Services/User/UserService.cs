@@ -122,7 +122,7 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
         };
     }
 
-    public async Task<UserResponse> UpdateUserAsync(int userId, UpdateUserRequest req, CancellationToken ct)
+    public async Task<UserResponse> UpdateUserAsync(int adminUserId, int userId, UpdateUserRequest req, CancellationToken ct)
     {
         var user = await context.Users.Include(x => x.Role).FirstOrDefaultAsync(x => x.Id == userId, ct);
     
@@ -136,6 +136,9 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
         var role = await context.Roles.FirstOrDefaultAsync(x => x.Id == req.RoleId, ct);
         if (role is null)
             throw new KeyNotFoundException("Role not found");
+        
+        if(userId == adminUserId && role.Id != user.RoleId)
+            throw new InvalidOperationException("Admin user can not change his own role");
     
         user.Name = req.Name;
         user.Email = req.Email;
@@ -166,8 +169,11 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
         await RevokeAllRefreshTokensAsync(userId, ct);
     }
 
-    public async Task DeleteUserAsync(int userId, CancellationToken ct)
+    public async Task DeleteUserAsync(int adminUserId, int userId, CancellationToken ct)
     {
+        if(userId == adminUserId)
+            throw new InvalidOperationException("Admin user can't delete his own user");
+        
         var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId, ct);
         if (user == null)
             throw new KeyNotFoundException("User not found");

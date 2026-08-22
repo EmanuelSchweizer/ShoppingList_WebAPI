@@ -37,7 +37,8 @@ public class UserController(IUserService service) : ControllerBase
     [Authorize(Policy = "RequireAdmin")]
     public async Task<ActionResult<UserResponse>> UpdateUser(int id, UpdateUserRequest request, CancellationToken ct = default)
     {
-        var response = await service.UpdateUserAsync(id, request, ct);
+        var adminUserId = User.GetUserId();
+        var response = await service.UpdateUserAsync(adminUserId, id, request, ct);
         return Ok(response);
     }
 
@@ -53,7 +54,8 @@ public class UserController(IUserService service) : ControllerBase
     [Authorize(Policy = "RequireAdmin")]
     public async Task<ActionResult> DeleteUser(int id, CancellationToken ct = default)
     {
-        await service.DeleteUserAsync(id, ct);
+        var adminUserId = User.GetUserId();
+        await service.DeleteUserAsync(adminUserId, id, ct);
         return NoContent();
     }
 
