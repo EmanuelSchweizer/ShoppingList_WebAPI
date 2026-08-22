@@ -133,16 +133,17 @@ public class UserService(AppDbContext context, IConfiguration config) : IUserSer
         if (emailTaken)
             throw new InvalidOperationException("Email is already in use");
 
-        var roleExists = await context.Roles.AnyAsync(x => x.Id == req.RoleId, ct);
-        if (!roleExists)
+        var role = await context.Roles.FirstOrDefaultAsync(x => x.Id == req.RoleId, ct);
+        if (role is null)
             throw new KeyNotFoundException("Role not found");
     
         user.Name = req.Name;
         user.Email = req.Email;
         user.RoleId = req.RoleId;
+        user.Role = role;
     
         await context.SaveChangesAsync(ct);
-
+        
         return new UserResponse
         {
             Id = user.Id,

@@ -9,6 +9,7 @@ using ShoppingList_WebAPI.Extensions;
 using ShoppingList_WebAPI.Services.ListItems;
 using ShoppingList_WebAPI.Services.SharedLists;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using ShoppingList_WebAPI.Services.Roles;
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IShoppingListService, ShoppingListService>();
 builder.Services.AddScoped<IListItemsService, ListItemsService>();
 builder.Services.AddScoped<ISharedListService, SharedListService>();
+builder.Services.AddScoped<IRolesService,  RolesService>();
 builder.Services.AddDbContext<AppDbContext>(opt 
     => opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
